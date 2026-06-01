@@ -252,13 +252,6 @@ body, html {
 }
 
 
-/* ---- LOGO BP-DEV ---- */
-.logo-bpdev-splash { width: 110px; max-width: 40vw; opacity: 0.65; margin-top: 12px; }
-.logo-bpdev-settings { width: 140px; max-width: 55vw; margin-top: 8px; }
-:root.dark-mode .logo-bpdev-splash,
-:root.dark-mode .logo-bpdev-settings { filter: brightness(0) invert(1); opacity: 0.75; }
-/* Plein soleil : logo inchangé (couleurs originales sur fond clair) */
-
 /* ---- PAGE PARAMÈTRES ---- */
 .settings-group { width: 100%; flex-shrink: 0; }
 .settings-label {
@@ -510,7 +503,7 @@ h2 {
 /* ---- BARRE DE NAVIGATION — VERSION FLOTTANTE PREMIUM (Style Tracker) ---- */
 .bottom-nav {
     position: fixed;
-    bottom: 20px;
+    bottom: max(6px, env(safe-area-inset-bottom));
     left: 50%;
     transform: translateX(-50%);
     width: calc(100% - 40px);
@@ -518,7 +511,7 @@ h2 {
     background: var(--bg);
     display: flex;
     justify-content: space-around;
-    padding: 10px 5px calc(10px + env(safe-area-inset-bottom));
+    padding: 10px 5px 10px;
     border-radius: 24px;
     box-shadow: var(--neu-out-md);
     z-index: 1000;
