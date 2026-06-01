@@ -1878,46 +1878,87 @@
     var _HISTO_MONTHS = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
 
     function renderHistorique() {
-        const container = document.getElementById('historique-eleve-container');
-        const listContainer = document.getElementById('historique-list');
+        var container = document.getElementById('historique-eleve-container');
+        var listContainer = document.getElementById('historique-list');
         if (!container || !listContainer) return;
 
         listContainer.innerHTML = '';
 
         if (!_eleveActif || !_eleveActif.nom) {
-            container.innerHTML = `
-                <div class="histo-vide-card">
-                    <div class="coaching-vide-icon"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg></div>
-                    <div style="color:var(--text-muted);font-size:0.9rem;margin-bottom:14px;">Sélectionnez un élève pour voir son historique.</div>
-                    <button class="btn-main" onclick="switchTab('page-eleves', null)">Choisir un élève</button>
-                </div>
-            `;
+            container.innerHTML = '<div class="histo-vide-card"><div class="coaching-vide-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg></div><div style="text-align:center;color:var(--text-muted);font-size:0.9rem;margin-bottom:14px">Sélectionnez un élève pour voir son historique.</div><button class="btn-main" onclick="switchTab(\'page-eleves\', null)">Choisir un élève</button></div>';
             return;
         }
 
-        const DISC_LABELS = { 'FU': 'Fosse Universelle', 'DTL': 'Fosse DTL', 'TRAP 1': 'Trap 1', 'PCH': 'Parcours de Chasse', 'CS': 'Compak Sporting' };
-        // Séries de l'élève FILTRÉES par la discipline sélectionnée
-        const allSeries = (db.eleves[_eleveActif.nom] || []);
-        const discActive = _eleveActif.disc || _selectedDisc;
-        const series = discActive ? allSeries.filter(s => s.disc === discActive) : allSeries;
-        const discLabel = DISC_LABELS[discActive] || discActive || 'Aucune discipline';
+        var DISC_LABELS = { 'FU': 'Fosse Universelle', 'DTL': 'Fosse DTL', 'TRAP 1': 'Trap 1', 'PCH': 'Parcours de Chasse', 'CS': 'Compak Sporting' };
+        var allSeries = (db.eleves[_eleveActif.nom] || []);
+        var discActive = _eleveActif.disc || _selectedDisc;
+        var series = discActive ? allSeries.filter(function(s) { return s.disc === discActive; }) : allSeries;
+        var discLabel = DISC_LABELS[discActive] || discActive || 'Aucune discipline';
 
-        container.innerHTML = `
-            <div class="coaching-eleve-card">
-                <div class="coaching-eleve-nom">${sanitize(_eleveActif.nom)}</div>
-                <div class="coaching-eleve-disc">${discLabel}</div>
-                <div class="coaching-eleve-info">${series.length} série${series.length !== 1 ? 's' : ''} enregistrée${series.length !== 1 ? 's' : ''} en ${discActive || '?'}</div>
-            </div>
-        `;
+        container.innerHTML = '<div class="coaching-eleve-card"><div class="coaching-eleve-nom">' + sanitize(_eleveActif.nom) + '</div><div class="coaching-eleve-disc">' + discLabel + '</div><div class="coaching-eleve-info">' + series.length + ' série' + (series.length !== 1 ? 's' : '') + ' enregistrée' + (series.length !== 1 ? 's' : '') + ' en ' + (discActive || '?') + '</div></div>';
 
         if (series.length === 0) {
             listContainer.innerHTML = '<div class="disc-folder-empty">Aucune série enregistrée en ' + (discActive || '?') + '</div>';
             return;
         }
 
-        // Construire l'arborescence : Année → Trimestre → Mois → Semaine → Séries
-        const tree = _buildHistoTree(series);
-        _renderHistoTree(listContainer, tree, 0);
+        // Store series for drill-down access
+        _drillAllSeries = series;
+        _drillStack = [];
+
+        // Build years list
+        var yearMap = {};
+        series.forEach(function(s) {
+            var d = _parseHistoDate(s.date);
+            if (!d) return;
+            var y = d.getFullYear();
+            if (!yearMap[y]) yearMap[y] = [];
+            yearMap[y].push(s);
+        });
+        var years = Object.keys(yearMap).sort(function(a, b) { return b - a; });
+
+        // Build drill-down viewport
+        var html = '<div class="drill-viewport">';
+
+        // Level 0: Years
+        html += '<div class="drill-level current" id="drill-level-years">';
+        html += '<div class="drill-level-title">Années</div>';
+        html += '<div class="drill-tile-group">';
+        years.forEach(function(y) {
+            var ySeries = yearMap[y];
+            var avg = Math.round(ySeries.reduce(function(a, s) { return a + Math.round(parseInt(s.score) / maxParSerie(s.disc) * 100); }, 0) / ySeries.length);
+            html += '<div class="drill-tile" onclick="_drillDown(\'years\',\'' + y + '\')">';
+            html += '<div class="tile-left"><div class="tile-icon icon-year">' + String(y).slice(-2) + '</div>';
+            html += '<div class="tile-text"><div class="tile-label">' + y + '</div>';
+            html += '<div class="tile-sub">' + ySeries.length + ' série' + (ySeries.length > 1 ? 's' : '') + ' · Moy. ' + avg + '%</div></div></div>';
+            html += '<span class="tile-chevron">›</span></div>';
+        });
+        html += '</div></div>';
+
+        // Level 1: Quarters
+        html += '<div class="drill-level right" id="drill-level-quarters">';
+        html += '<button class="drill-back" onclick="_drillBack(\'quarters\')"><span class="back-arrow">‹</span> Retour</button>';
+        html += '<div class="drill-breadcrumb" id="drill-bc-quarters"></div>';
+        html += '<div class="drill-level-title" id="drill-title-quarters"></div>';
+        html += '<div id="drill-content-quarters"></div></div>';
+
+        // Level 2: Months
+        html += '<div class="drill-level right" id="drill-level-months">';
+        html += '<button class="drill-back" onclick="_drillBack(\'months\')"><span class="back-arrow">‹</span> Retour</button>';
+        html += '<div class="drill-breadcrumb" id="drill-bc-months"></div>';
+        html += '<div class="drill-level-title" id="drill-title-months"></div>';
+        html += '<div id="drill-content-months"></div></div>';
+
+        // Level 3: Series
+        html += '<div class="drill-level right" id="drill-level-series">';
+        html += '<button class="drill-back" onclick="_drillBack(\'series\')"><span class="back-arrow">‹</span> Retour</button>';
+        html += '<div class="drill-breadcrumb" id="drill-bc-series"></div>';
+        html += '<div class="drill-level-title" id="drill-title-series"></div>';
+        html += '<div id="drill-content-series"></div></div>';
+
+        html += '</div>';
+
+        listContainer.innerHTML = html;
     }
 
     function _parseHistoDate(dateStr) {
@@ -2183,6 +2224,166 @@
         } else {
             renderHistorique();
         }
+    }
+
+    /* ══════════════════════════════════════════
+       DRILL-DOWN HISTORIQUE — Navigation par niveaux
+       ══════════════════════════════════════════ */
+    var _drillAllSeries = [];
+    var _drillStack = [];
+    var _drillLevels = ['years', 'quarters', 'months', 'series'];
+
+    function _setDrillLevel(id, direction) {
+        _drillLevels.forEach(function(lv) {
+            var el = document.getElementById('drill-level-' + lv);
+            if (!el) return;
+            if (lv === id) {
+                el.className = 'drill-level current';
+            } else if (direction === 'forward') {
+                el.className = 'drill-level left';
+            } else {
+                el.className = 'drill-level right';
+            }
+        });
+    }
+
+    function _drillDown(fromLevel, value) {
+        var allSeries = _drillAllSeries;
+
+        if (fromLevel === 'years') {
+            var year = value;
+            var yearSeries = allSeries.filter(function(s) { return _parseHistoDate(s.date) && _parseHistoDate(s.date).getFullYear() === parseInt(year); });
+            var quarters = [];
+            yearSeries.forEach(function(s) {
+                var d = _parseHistoDate(s.date);
+                var q = Math.floor(d.getMonth() / 3) + 1;
+                if (quarters.indexOf(q) === -1) quarters.push(q);
+            });
+            quarters.sort(function(a, b) { return b - a; });
+
+            var titleEl = document.getElementById('drill-title-quarters');
+            if (titleEl) titleEl.textContent = year;
+            var bcEl = document.getElementById('drill-bc-quarters');
+            if (bcEl) bcEl.innerHTML = _buildDrillBreadcrumb(['years'], [year]);
+
+            var html = '<div class="drill-tile-group">';
+            quarters.forEach(function(q) {
+                var qSeries = yearSeries.filter(function(s) {
+                    var d = _parseHistoDate(s.date);
+                    return Math.floor(d.getMonth() / 3) + 1 === q;
+                });
+                var avg = Math.round(qSeries.reduce(function(a, s) { return a + Math.round(parseInt(s.score) / maxParSerie(s.disc) * 100); }, 0) / qSeries.length);
+                html += '<div class="drill-tile" onclick="_drillDown(\'quarters\',\'' + q + '\',\'' + year + '\')">';
+                html += '<div class="tile-left"><div class="tile-icon icon-q">T' + q + '</div>';
+                html += '<div class="tile-text"><div class="tile-label">Trimestre ' + q + '</div>';
+                html += '<div class="tile-sub">' + qSeries.length + ' série' + (qSeries.length > 1 ? 's' : '') + ' · Moy. ' + avg + '%</div></div></div>';
+                html += '<span class="tile-chevron">›</span></div>';
+            });
+            html += '</div>';
+
+            var cont = document.getElementById('drill-content-quarters');
+            if (cont) cont.innerHTML = html;
+            _drillStack = [{ level: 'years', data: { year: year } }];
+            _setDrillLevel('quarters', 'forward');
+
+        } else if (fromLevel === 'quarters') {
+            var quarter = value;
+            var year = arguments[2] || (_drillStack[0] && _drillStack[0].data.year) || '2026';
+            var qSeries = allSeries.filter(function(s) {
+                var d = _parseHistoDate(s.date);
+                return d && d.getFullYear() === parseInt(year) && Math.floor(d.getMonth() / 3) + 1 === parseInt(quarter);
+            });
+            var months = [];
+            qSeries.forEach(function(s) {
+                var d = _parseHistoDate(s.date);
+                if (months.indexOf(d.getMonth()) === -1) months.push(d.getMonth());
+            });
+            months.sort(function(a, b) { return b - a; });
+
+            var titleEl = document.getElementById('drill-title-months');
+            if (titleEl) titleEl.textContent = 'Trimestre ' + quarter;
+            var bcEl = document.getElementById('drill-bc-months');
+            if (bcEl) bcEl.innerHTML = _buildDrillBreadcrumb(['years', 'quarters'], [year, 'T' + quarter]);
+
+            var html = '<div class="drill-tile-group">';
+            months.forEach(function(m) {
+                var mSeries = qSeries.filter(function(s) { return _parseHistoDate(s.date).getMonth() === m; });
+                var avg = Math.round(mSeries.reduce(function(a, s) { return a + Math.round(parseInt(s.score) / maxParSerie(s.disc) * 100); }, 0) / mSeries.length);
+                html += '<div class="drill-tile" onclick="_drillDown(\'months\',\'' + m + '\',\'' + quarter + '\',\'' + year + '\')">';
+                html += '<div class="tile-left"><div class="tile-icon icon-month">' + _HISTO_MONTHS[m].substring(0, 3) + '</div>';
+                html += '<div class="tile-text"><div class="tile-label">' + _HISTO_MONTHS[m] + '</div>';
+                html += '<div class="tile-sub">' + mSeries.length + ' série' + (mSeries.length > 1 ? 's' : '') + ' · Moy. ' + avg + '%</div></div></div>';
+                html += '<span class="tile-chevron">›</span></div>';
+            });
+            html += '</div>';
+
+            var cont = document.getElementById('drill-content-months');
+            if (cont) cont.innerHTML = html;
+            _drillStack.push({ level: 'quarters', data: { year: year, quarter: quarter } });
+            _setDrillLevel('months', 'forward');
+
+        } else if (fromLevel === 'months') {
+            var month = value;
+            var quarter = arguments[2] || '1';
+            var year = arguments[3] || '2026';
+            var mSeries = allSeries.filter(function(s) {
+                var d = _parseHistoDate(s.date);
+                return d && d.getFullYear() === parseInt(year) && Math.floor(d.getMonth() / 3) + 1 === parseInt(quarter) && d.getMonth() === parseInt(month);
+            });
+
+            var titleEl = document.getElementById('drill-title-series');
+            if (titleEl) titleEl.textContent = _HISTO_MONTHS[parseInt(month)];
+            var bcEl = document.getElementById('drill-bc-series');
+            if (bcEl) bcEl.innerHTML = _buildDrillBreadcrumb(['years', 'quarters', 'months'], [year, 'T' + quarter, _HISTO_MONTHS[parseInt(month)]]);
+
+            var html = '<div class="drill-series-group">';
+            mSeries.sort(function(a, b) { return (b.id || 0) - (a.id || 0); }).forEach(function(s) {
+                var max = maxParSerie(s.disc);
+                var pct = Math.round(parseInt(s.score) / max * 100);
+                var pctClass = pct >= 85 ? 'excellent' : pct >= 70 ? 'good' : 'poor';
+                var discClass = s.disc ? s.disc.toLowerCase().replace(/\s+/g, '') : '';
+                var windInfo = s.vent && s.vent !== 'faible' ? '💨 ' + s.vent : '';
+                html += '<div class="drill-series-card drill-slide-up" onclick="ouvrirStatsPourSerie(_drillAllSeries[' + allSeries.indexOf(s) + '])">';
+                html += '<div class="sc-left">';
+                html += '<div class="sc-date">' + s.date + (s.poste ? ' · Poste ' + s.poste : '') + '</div>';
+                if (windInfo) html += '<div class="sc-detail">' + windInfo + '</div>';
+                html += '</div>';
+                html += '<div class="sc-right">';
+                html += '<span class="sc-badge ' + discClass + '">' + (s.disc || '?') + '</span>';
+                html += '<span class="sc-score">' + s.score + '/' + max + '</span>';
+                html += '<span class="sc-pct ' + pctClass + '">' + pct + '%</span>';
+                html += '</div></div>';
+            });
+            if (mSeries.length === 0) html += '<div class="drill-empty">Aucune série enregistrée</div>';
+            html += '</div>';
+
+            var cont = document.getElementById('drill-content-series');
+            if (cont) cont.innerHTML = html;
+            _drillStack.push({ level: 'months', data: { year: year, quarter: quarter, month: month } });
+            _setDrillLevel('series', 'forward');
+        }
+    }
+
+    function _drillBack(fromLevel) {
+        var idx = _drillLevels.indexOf(fromLevel);
+        if (idx <= 0) return;
+        var targetLevel = _drillLevels[idx - 1];
+        _setDrillLevel(targetLevel, 'backward');
+        _drillStack.pop();
+    }
+
+    function _buildDrillBreadcrumb(levels, labels) {
+        var html = '';
+        levels.forEach(function(lv, i) {
+            var isCurrent = (i === levels.length - 1);
+            if (i > 0) html += '<span class="bc-sep">›</span>';
+            if (isCurrent) {
+                html += '<span class="bc-current">' + labels[i] + '</span>';
+            } else {
+                html += '<span class="bc-seg" onclick="_drillBack(\'' + levels[i + 1] + '\')">' + labels[i] + '</span>';
+            }
+        });
+        return html;
     }
 
     function ajouterEleve() {
@@ -7442,7 +7643,7 @@
     ========================================================= */
     const SW_CODE = `
 const CACHE = 'balltrap-masterpro-v1.3';
-const SHELL = [location.href, './style.css', './timelock.js', './app.js', './bpdev-logo.svg'];
+const SHELL = [location.href, './style.css', './app.js', './bpdev-logo.svg'];
 
 self.addEventListener('install', e => {
     e.waitUntil(
