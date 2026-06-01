@@ -220,11 +220,6 @@ body, html {
 .logo-title   { font-size: 2.8rem; font-weight: 900; color: var(--text-primary); letter-spacing: -1px; margin: 0; }
 .logo-sub     { font-size: 1rem; color: var(--accent); font-weight: 700; text-transform: uppercase; margin-top: 8px; letter-spacing: 2px; }
 .logo-version { margin-top: 50px; color: var(--text-muted); font-size: 0.75rem; font-weight: 600; letter-spacing: 1px; }
-.logo-bpdev-splash { width: 110px; max-width: 40vw; opacity: 0.65; margin-top: 12px; }
-.logo-bpdev-settings { width: 140px; max-width: 55vw; margin-top: 8px; }
-:root.dark-mode .logo-bpdev-splash,
-:root.dark-mode .logo-bpdev-settings { filter: brightness(0) invert(1); opacity: 0.75; }
-/* Plein soleil : logo inchangé (couleurs originales sur fond clair) */
 
 .btn-enter {
     width: 180px; height: 180px; border-radius: 50%; border: none;
@@ -256,6 +251,13 @@ body, html {
     to { opacity: 1; }
 }
 
+
+/* ---- LOGO BP-DEV ---- */
+.logo-bpdev-splash { width: 110px; max-width: 40vw; opacity: 0.65; margin-top: 12px; }
+.logo-bpdev-settings { width: 140px; max-width: 55vw; margin-top: 8px; }
+:root.dark-mode .logo-bpdev-splash,
+:root.dark-mode .logo-bpdev-settings { filter: brightness(0) invert(1); opacity: 0.75; }
+/* Plein soleil : logo inchangé (couleurs originales sur fond clair) */
 
 /* ---- PAGE PARAMÈTRES ---- */
 .settings-group { width: 100%; flex-shrink: 0; }
@@ -1685,3 +1687,285 @@ select.input-neu {
 
 /* Color dots (keep but clean up) */
 .color-dot { /* already defined, just ensure no inline style needed */ }
+
+/* ══════════════════════════════════════════
+   DRILL-DOWN HISTORIQUE — Tuiles plates
+   Chaque niveau remplace le précédent (iOS Settings style)
+   ══════════════════════════════════════════ */
+
+/* Hide scrollbar globally for drill-down */
+.drill-viewport,
+.drill-level,
+.drill-level * {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+.drill-viewport::-webkit-scrollbar,
+.drill-level::-webkit-scrollbar,
+.drill-level *::-webkit-scrollbar { display: none; }
+
+/* Viewport container */
+.drill-viewport {
+    position: relative;
+    overflow: hidden;
+    width: 100%;
+    min-height: 50vh;
+}
+
+/* Each level slides in/out */
+.drill-level {
+    position: absolute;
+    inset: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.35s ease;
+    padding: 0 0 20px;
+}
+.drill-level.current  { transform: translateX(0);    opacity: 1; pointer-events: all; }
+.drill-level.left     { transform: translateX(-30%); opacity: 0; pointer-events: none; }
+.drill-level.right    { transform: translateX(100%);  opacity: 0; pointer-events: none; }
+
+/* Breadcrumb */
+.drill-breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 0 12px;
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    flex-wrap: wrap;
+}
+.drill-breadcrumb .bc-seg {
+    color: var(--info-color);
+    font-weight: 600;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+.drill-breadcrumb .bc-seg:hover { color: var(--accent); }
+.drill-breadcrumb .bc-sep { color: var(--text-label); font-size: 0.6rem; }
+.drill-breadcrumb .bc-current { color: var(--text-primary); font-weight: 700; }
+
+/* Level title */
+.drill-level-title {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    margin-bottom: 14px;
+    letter-spacing: 0.01em;
+}
+
+/* ─── Tile group: hollow container with flat tiles inside ─── */
+.drill-tile-group {
+    background: var(--bg);
+    border-radius: var(--radius-md);
+    box-shadow: inset 3px 3px 6px var(--shadow-dark), inset -3px -3px 6px var(--shadow-light);
+    overflow: hidden;
+    margin-bottom: 14px;
+}
+
+/* Individual flat tile (no neumorphism) */
+.drill-tile {
+    width: 100%;
+    padding: 15px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    border-bottom: 1px solid var(--shadow-dark);
+    transition: background 0.15s ease;
+    -webkit-tap-highlight-color: transparent;
+    background: transparent;
+}
+.drill-tile:last-child { border-bottom: none; }
+.drill-tile:active { background: rgba(0,0,0,0.04); }
+:root.dark-mode .drill-tile:active { background: rgba(255,255,255,0.04); }
+
+.drill-tile .tile-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+    min-width: 0;
+}
+.drill-tile .tile-icon {
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    font-weight: 800;
+    color: #fff;
+    flex-shrink: 0;
+    letter-spacing: 0.02em;
+}
+.tile-icon.icon-year  { background: var(--info-color); }
+.tile-icon.icon-q     { background: var(--accent); }
+.tile-icon.icon-month { background: #9b59b6; }
+
+.drill-tile .tile-text { flex: 1; min-width: 0; }
+.drill-tile .tile-label {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+.drill-tile .tile-sub {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    margin-top: 1px;
+}
+.drill-tile .tile-chevron {
+    font-size: 1.2rem;
+    color: var(--text-label);
+    flex-shrink: 0;
+    transition: transform 0.2s;
+    margin-left: 8px;
+    opacity: 0.5;
+}
+
+/* ─── Back button ─── */
+.drill-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 8px 14px;
+    margin-bottom: 8px;
+    background: var(--bg);
+    border: none;
+    border-radius: var(--radius-sm);
+    box-shadow: var(--neu-out-sm);
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--info-color);
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s;
+    -webkit-tap-highlight-color: transparent;
+}
+.drill-back:active { transform: scale(0.96); box-shadow: var(--neu-in); }
+.drill-back .back-arrow { font-size: 1rem; }
+
+/* ─── Series card inside drill-down (flat, no neumorphism) ─── */
+.drill-series-group {
+    background: var(--bg);
+    border-radius: var(--radius-md);
+    box-shadow: inset 3px 3px 6px var(--shadow-dark), inset -3px -3px 6px var(--shadow-light);
+    overflow: hidden;
+    margin-bottom: 14px;
+}
+
+.drill-series-card {
+    width: 100%;
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    border-bottom: 1px solid var(--shadow-dark);
+    transition: background 0.15s ease;
+    -webkit-tap-highlight-color: transparent;
+    background: transparent;
+    gap: 10px;
+}
+.drill-series-card:last-child { border-bottom: none; }
+.drill-series-card:active { background: rgba(0,0,0,0.04); }
+:root.dark-mode .drill-series-card:active { background: rgba(255,255,255,0.04); }
+
+.drill-series-card .sc-left {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1;
+    min-width: 0;
+}
+.drill-series-card .sc-date {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+.drill-series-card .sc-detail {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+}
+.drill-series-card .sc-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+.drill-series-card .sc-badge {
+    padding: 3px 10px;
+    border-radius: 8px;
+    font-size: 0.66rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    color: #fff;
+}
+.drill-series-card .sc-badge.fu    { background: #5b8def; }
+.drill-series-card .sc-badge.dtl   { background: #9b59b6; }
+.drill-series-card .sc-badge.trap1 { background: #1abc9c; }
+.drill-series-card .sc-badge.pch   { background: #e67e22; }
+.drill-series-card .sc-badge.cs    { background: #e66756; }
+
+.drill-series-card .sc-score {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    letter-spacing: -0.02em;
+    white-space: nowrap;
+}
+.drill-series-card .sc-pct {
+    font-size: 0.85rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+.drill-series-card .sc-pct.excellent { color: var(--v-color); }
+.drill-series-card .sc-pct.good     { color: var(--o-color); }
+.drill-series-card .sc-pct.poor     { color: var(--r-color); }
+
+/* Mini progress bar */
+.sc-progress-bar {
+    width: 100%;
+    height: 4px;
+    background: var(--shadow-dark);
+    border-radius: 2px;
+    margin-top: 6px;
+    overflow: hidden;
+}
+.sc-progress-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 0.4s ease;
+}
+.sc-progress-fill.excellent { background: var(--v-color); }
+.sc-progress-fill.good      { background: var(--o-color); }
+.sc-progress-fill.poor      { background: var(--r-color); }
+
+/* Delete button in drill-down series card */
+.drill-series-del {
+    background: none;
+    border: none;
+    color: var(--text-label);
+    cursor: pointer;
+    padding: 4px 6px;
+    opacity: 0.4;
+    font-size: 1rem;
+    flex-shrink: 0;
+    transition: all 0.15s;
+}
+.drill-series-del:active { opacity: 1; color: var(--r-color); }
+
+/* ─── Empty state ─── */
+.drill-empty {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+}
+
+/* ─── Drill-down slide-up animation ─── */
+@keyframes drillSlideUp {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.drill-slide-up { animation: drillSlideUp 0.3s ease forwards; }
