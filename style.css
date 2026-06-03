@@ -1710,6 +1710,7 @@ select.input-neu {
     overflow: hidden;
     width: 100%;
     min-height: 50vh;
+    box-sizing: border-box;
 }
 
 /* Each level slides in/out */
@@ -1720,7 +1721,8 @@ select.input-neu {
     overflow-x: hidden;
     -webkit-overflow-scrolling: touch;
     transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.35s ease;
-    padding: 0 0 20px;
+    padding: 0 16px 20px;
+    text-align: center;
 }
 .drill-level.current  { transform: translateX(0);    opacity: 1; pointer-events: all; }
 .drill-level.left     { transform: translateX(-30%); opacity: 0; pointer-events: none; }
@@ -1730,6 +1732,7 @@ select.input-neu {
 .drill-breadcrumb {
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 6px;
     padding: 10px 0 12px;
     font-size: 0.78rem;
@@ -1746,40 +1749,46 @@ select.input-neu {
 .drill-breadcrumb .bc-sep { color: var(--text-label); font-size: 0.6rem; }
 .drill-breadcrumb .bc-current { color: var(--text-primary); font-weight: 700; }
 
-/* Level title */
+/* Level title — colored pill style like discipline buttons */
 .drill-level-title {
-    font-size: 1.1rem;
+    display: inline-block;
+    font-size: 0.85rem;
     font-weight: 800;
-    color: var(--text-primary);
-    margin-bottom: 14px;
-    letter-spacing: 0.01em;
+    color: #fff;
+    background: var(--accent);
+    padding: 8px 20px;
+    border-radius: 20px;
+    margin: 0 auto 14px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    box-shadow: 0 4px 8px rgba(243, 156, 18, 0.3);
+    text-align: center;
 }
 
-/* ─── Tile group: hollow container with flat tiles inside ─── */
+/* ─── Tile group: container with relief tiles inside ─── */
 .drill-tile-group {
-    background: var(--bg);
-    border-radius: var(--radius-md);
-    box-shadow: inset 3px 3px 6px var(--shadow-dark), inset -3px -3px 6px var(--shadow-light);
-    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
     margin-bottom: 14px;
 }
 
-/* Individual flat tile (no neumorphism) */
+/* Individual relief tile (neumorphic out) */
 .drill-tile {
     width: 100%;
-    padding: 15px 18px;
+    padding: 14px 16px;
     display: flex;
     align-items: center;
     justify-content: space-between;
     cursor: pointer;
-    border-bottom: 1px solid var(--shadow-dark);
-    transition: background 0.15s ease;
+    border-radius: 14px;
+    background: var(--bg);
+    box-shadow: var(--neu-out-sm);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
     -webkit-tap-highlight-color: transparent;
-    background: transparent;
+    box-sizing: border-box;
 }
-.drill-tile:last-child { border-bottom: none; }
-.drill-tile:active { background: rgba(0,0,0,0.04); }
-:root.dark-mode .drill-tile:active { background: rgba(255,255,255,0.04); }
+.drill-tile:active { transform: scale(0.98); box-shadow: var(--neu-in); }
 
 .drill-tile .tile-left {
     display: flex;
@@ -1791,7 +1800,7 @@ select.input-neu {
 .drill-tile .tile-icon {
     width: 36px; height: 36px;
     border-radius: 10px;
-    display: flex;
+    display: none; /* Hidden: icon redundant with centered label */
     align-items: center;
     justify-content: center;
     font-size: 0.85rem;
@@ -1804,16 +1813,18 @@ select.input-neu {
 .tile-icon.icon-q     { background: var(--accent); }
 .tile-icon.icon-month { background: #9b59b6; }
 
-.drill-tile .tile-text { flex: 1; min-width: 0; }
+.drill-tile .tile-text { flex: 1; min-width: 0; text-align: center; }
 .drill-tile .tile-label {
     font-size: 0.95rem;
     font-weight: 700;
     color: var(--text-primary);
+    text-align: center;
 }
 .drill-tile .tile-sub {
     font-size: 0.72rem;
     color: var(--text-muted);
     margin-top: 1px;
+    text-align: center;
 }
 .drill-tile .tile-chevron {
     font-size: 1.2rem;
@@ -1824,13 +1835,14 @@ select.input-neu {
     opacity: 0.5;
 }
 
-/* ─── Back button ─── */
+/* ─── Back button (centered) ─── */
 .drill-back {
-    display: inline-flex;
+    display: flex;
     align-items: center;
+    justify-content: center;
     gap: 5px;
-    padding: 8px 14px;
-    margin-bottom: 8px;
+    padding: 10px 18px;
+    margin: 0 auto 12px;
     background: var(--bg);
     border: none;
     border-radius: var(--radius-sm);
@@ -1845,31 +1857,30 @@ select.input-neu {
 .drill-back:active { transform: scale(0.96); box-shadow: var(--neu-in); }
 .drill-back .back-arrow { font-size: 1rem; }
 
-/* ─── Series card inside drill-down (flat, no neumorphism) ─── */
+/* ─── Series card inside drill-down (relief neumorphic) ─── */
 .drill-series-group {
-    background: var(--bg);
-    border-radius: var(--radius-md);
-    box-shadow: inset 3px 3px 6px var(--shadow-dark), inset -3px -3px 6px var(--shadow-light);
-    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
     margin-bottom: 14px;
 }
 
 .drill-series-card {
     width: 100%;
-    padding: 14px 18px;
+    padding: 14px 16px;
     display: flex;
     align-items: center;
     justify-content: space-between;
     cursor: pointer;
-    border-bottom: 1px solid var(--shadow-dark);
-    transition: background 0.15s ease;
+    border-radius: 14px;
+    background: var(--bg);
+    box-shadow: var(--neu-out-sm);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
     -webkit-tap-highlight-color: transparent;
-    background: transparent;
     gap: 10px;
+    box-sizing: border-box;
 }
-.drill-series-card:last-child { border-bottom: none; }
-.drill-series-card:active { background: rgba(0,0,0,0.04); }
-:root.dark-mode .drill-series-card:active { background: rgba(255,255,255,0.04); }
+.drill-series-card:active { transform: scale(0.98); box-shadow: var(--neu-in); }
 
 .drill-series-card .sc-left {
     display: flex;
@@ -1906,6 +1917,8 @@ select.input-neu {
 .drill-series-card .sc-badge.trap1 { background: #1abc9c; }
 .drill-series-card .sc-badge.pch   { background: #e67e22; }
 .drill-series-card .sc-badge.cs    { background: #e66756; }
+.drill-series-card .sc-badge.fosseolympique  { background: #3a7bd5; }
+.drill-series-card .sc-badge.skeetolympique  { background: #8e44ad; }
 
 .drill-series-card .sc-score {
     font-size: 1.15rem;
