@@ -2898,7 +2898,7 @@
         document.getElementById('modal-serie-titre').textContent =
             serie.tireur + ' — ' + serie.disc + (serie.poste ? ' · Poste ' + serie.poste : '');
         document.getElementById('modal-serie-sous-titre').textContent = serie.date;
-        document.getElementById('modal-serie-badge').textContent = 'SCORE : ' + serie.score + ' / ' + max + ' (' + pct + '%)';
+        document.getElementById('modal-serie-badge').textContent = serie.score + ' / ' + max + ' (' + pct + '%)';
 
         const saved = db.analysesCoach?.['serie_' + serie.id] || '';
         document.getElementById('modal-serie-texte').value = saved;
@@ -5017,7 +5017,7 @@
         var nbPlateaux = serie.grille.length;
 
         var badge = document.getElementById('escalier-badge');
-        if (badge) badge.textContent = 'SCORE : ' + serie.score + ' / ' + max;
+        if (badge) badge.textContent = serie.score + ' / ' + max;
 
         var container = document.getElementById('escalier-bars');
         if (!container) return;
@@ -5046,12 +5046,6 @@
                 bar.style.background = 'var(--r-color)';
             }
 
-            // Marqueur visuel pour les raccrochages (petit losange en haut de barre)
-            if (v === 2) {
-                var marker = document.createElement('div');
-                marker.style.cssText = 'position:absolute;top:-6px;left:50%;transform:translateX(-50%);width:6px;height:6px;background:var(--o-color);border-radius:50%;border:1.5px solid #fff;';
-                bar.appendChild(marker);
-            }
 
             // Labels tous les 5 plateaux
             if ((i + 1) % 5 === 0) {
